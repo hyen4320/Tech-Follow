@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body { background-color: #0a0a0f; }
+}
+
+@layer utilities {
+  .shimmer-box {
+    background: linear-gradient(
+      90deg,
+      theme('colors.ink.800') 0%,
+      theme('colors.ink.700') 50%,
+      theme('colors.ink.800') 100%
+    );
+    background-size: 400px 100%;
+    animation: shimmer 1.6s infinite;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
