@@ -41,6 +41,12 @@ public class Trends {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    @Column(columnDefinition = "TEXT")
+    private String titleKo;
+
+    @Column(columnDefinition = "TEXT")
+    private String contentKo;
+
     private LocalDateTime publishedAt;
     private LocalDateTime collectedAt;
 }

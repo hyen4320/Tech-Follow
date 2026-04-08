@@ -26,6 +26,7 @@ public class CrawlScheduler {
     private final TrendsRepository trendsRepository;
     private final SourcesRepository sourcesRepository;
     private final ExecutorService crawlExecutor;     // CrawlConfig Bean — 재사용
+    private final OllamaTranslator ollamaTranslator;
 
     // 1단계: 매일 오전 9시 — 목록 수집 (전 사이트 병렬)
     @Scheduled(cron = "0 0 9 * * *")
@@ -86,5 +87,32 @@ public class CrawlScheduler {
         trendsRepository.saveAll(filled);
         System.out.printf("[CrawlScheduler] 2단계 완료 — 처리: %d건 / 저장: %d건%n",
                 targets.size(), filled.size());
+    }
+
+    // 3단계: 매일 오전 11시 — 번역 (병렬)
+    @Scheduled(cron = "0 0 11 * * *")
+    public void translateContent() {
+        List<Trends> targets = trendsRepository.findByContentIsNotNullAndContentKoIsNull();
+        if (targets.isEmpty()) {
+            System.out.println("[CrawlScheduler] 3단계 — 번역 대상 없음");
+            return;
+        }
+
+        List<CompletableFuture<Void>> futures = targets.stream()
+                .map(trend -> CompletableFuture.runAsync(() -> {
+                    trend.setTitleKo(ollamaTranslator.translate(trend.getTitle()));
+                    trend.setContentKo(ollamaTranslator.translate(trend.getContent()));
+                }, crawlExecutor))
+                .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        List<Trends> translated = targets.stream()
+                .filter(t -> t.getContentKo() != null)
+                .toList();
+
+        trendsRepository.saveAll(translated);
+        System.out.printf("[CrawlScheduler] 3단계 완료 — 처리: %d건 / 저장: %d건%n",
+                targets.size(), translated.size());
     }
 }

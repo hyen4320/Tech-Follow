@@ -34,4 +34,8 @@ public interface TrendsRepository extends JpaRepository<Trends, Long> {
     // 본문 미수집 목록 조회 - Sources fetch join (LazyInitializationException 방지)
     @Query("SELECT t FROM Trends t JOIN FETCH t.sources WHERE t.content IS NULL")
     List<Trends> findByContentIsNull();
+
+    // 번역 미완료 목록 조회 (본문은 있으나 번역 없는 것)
+    @Query("SELECT t FROM Trends t WHERE t.content IS NOT NULL AND t.contentKo IS NULL")
+    List<Trends> findByContentIsNotNullAndContentKoIsNull();
 }
